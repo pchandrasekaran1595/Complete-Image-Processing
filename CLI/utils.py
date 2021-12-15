@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 READ_PATH = "Files"
 SAVE_PATH = "Processed"
+MODEL_PATH = "Models"
 
 
 if not os.path.exists(SAVE_PATH):
