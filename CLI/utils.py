@@ -17,15 +17,15 @@ class ImageHandler(object):
     def __init__(self):
         pass
 
-    def read_image(path: str) -> np.ndarray:
+    def read_image(self, path: str) -> np.ndarray:
         return cv2.imread(path, cv2.IMREAD_COLOR)
 
 
-    def save_image(image) -> None:
+    def save_image(self, image: np.ndarray) -> None:
         cv2.imwrite(os.path.join(SAVE_PATH, "Processed.jpg"), image)
 
 
-    def show(image: np.ndarray, title=None):
+    def show(self, image: np.ndarray, title=None):
         plt.figure()
         plt.imshow(cv2.cvtColor(src=image, code=cv2.COLOR_BGR2RGB))
         plt.axis("off")
@@ -46,7 +46,7 @@ def new_color(pixel: int, num_colors: int) -> int:
     return colors[index]
 
 
-def find_closest_color(pixel, num_colors):
+def find_closest_color(pixel: int, num_colors: int):
     colors = [i*(1/num_colors) for i in range(num_colors+1)]
     distances = [abs(colors[i]-pixel) for i in range(len(colors))]
     index = distances.index(min(distances))
