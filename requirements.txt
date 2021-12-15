@@ -1,0 +1,6 @@
+onnx==1.8.1
+numpy==1.19.5
+pytest==6.2.5
+matplotlib==3.3.3
+onnxruntime==1.9.0
+opencv-python==4.5.3.56
