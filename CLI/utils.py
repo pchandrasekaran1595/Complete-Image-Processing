@@ -1,6 +1,8 @@
 import os
 import cv2
+import onnx
 import numpy as np
+import onnxruntime as ort
 import matplotlib.pyplot as plt
 
 
@@ -175,13 +177,79 @@ class ImageProcessor(object):
                     image[i+1][j][c]   = image[i+1][j][c] + (quant_error * 5/16)
                     image[i+1][j-1][c] = image[i+1][j-1][c] + (quant_error * 3/16)
         return np.clip((image*255), 0, 255).astype("uint8")
+    
+    def alpha_blend(self, image_1: np.ndarray, image_2: np.ndarray, alpha: float):
+        h1, w1, _ = image_1.shape
+        h2, w2, _ = image_2.shape
+        if w1 != w2 or h1 != h2:
+            image_2 = cv2.resize(src=image_2, dsize=(w1, h1), interpolation=cv2.INTER_AREA)
+
+        return cv2.addWeighted(image_1, alpha, image_2, 1-alpha, 0)
+    
+    def combine(self, image_1: np.ndarray, image_2: np.ndarray, vertical: bool, adapt_small: bool):
+        h1, w1, _ = image_1.shape
+        h2, w2, _ = image_2.shape
+
+        if vertical:
+            if w1 > w2:
+                if adapt_small:
+                    image_2 = cv2.resize(src=image_2, dsize=(w1, h2), interpolation=cv2.INTER_AREA)
+                else:
+                    image_1 = cv2.resize(src=image_1, dsize=(w2, h1), interpolation=cv2.INTER_AREA)
+
+            elif w2 > w1:
+                if adapt_small:
+                    image_1 = cv2.resize(src=image_1, dsize=(w2, h1), interpolation=cv2.INTER_AREA)
+                else:
+                    image_2 = cv2.resize(src=image_2, dsize=(w1, h2), interpolation=cv2.INTER_AREA)
+                    
+            return np.vstack((image_1, image_2))
+        
+        else:
+            if h1 > h2:
+                if adapt_small:
+                    image_2 = cv2.resize(src=image_2, dsize=(w2, h1), interpolation=cv2.INTER_AREA)
+                else:
+                    image_1 = cv2.resize(src=image_1, dsize=(w1, h2), interpolation=cv2.INTER_AREA)
+
+            elif h2 > h1:
+                if adapt_small:
+                    image_1 = cv2.resize(src=image_1, dsize=(w1, h2), interpolation=cv2.INTER_AREA)
+                else:
+                    image_2 = cv2.resize(src=image_2, dsize=(w2, h1), interpolation=cv2.INTER_AREA)
+                    
+            return np.hstack((image_1, image_2))
 
 image_processor = ImageProcessor()
 
 #######################################################################################################
 
+def segmenter_decode(class_index_image: np.ndarray) -> np.ndarray:
+    colors = np.array([(0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128),
+                       (0, 128, 128), (128, 128, 128), (64, 0, 0), (192, 0, 0), (64, 128, 0),
+                       (192, 128, 0), (64, 0, 128), (192, 0, 128), (64, 128, 128), (192, 128, 128),
+                       (0, 64, 0), (128, 64, 0), (0, 192, 0), (128, 192, 0), (0, 64, 128)])
+
+    r, g, b = np.zeros(class_index_image.shape, dtype=np.uint8), \
+              np.zeros(class_index_image.shape, dtype=np.uint8), \
+              np.zeros(class_index_image.shape, dtype=np.uint8)
+
+    for i in range(21):
+        indexes = (class_index_image == i)
+        r[indexes] = colors[i][0]
+        g[indexes] = colors[i][1]
+        b[indexes] = colors[i][2]
+    return np.stack([r, g, b], axis=2)
+
+
 class ImageInferer(object):
     def __init__(self):
+        pass
+
+    def setup(self):
+        # model = onnx.load(self.path)
+        # onnx.checker.check_model(model)
+        # self.ort_session = ort.InferenceSession(self.path)
         pass
 
     def infer(self):
