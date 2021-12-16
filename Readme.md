@@ -10,7 +10,9 @@
 
 <br>
 
-- `--file, -f` - Image Filename (including extension)
+- `--file1, -f1` - Image Filename (including extension)
+- `--file2, -f2` - Image Filename (including extension)
+
 
 <br>
 
@@ -44,6 +46,23 @@
 
 - `--posterize, -post` - Number of Colors in result
 - `--dither, -dit` &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - Number of Colors in result
+
+<br>
+
+- `--alpha, -a` - Alpha Value
+
+<br>
+
+- `--combine, -c` &nbsp;&nbsp;&nbsp; - Flag to stack images horizontally
+- `--vertical, -v` &nbsp;&nbsp;&nbsp; - Flag to stack images vertically instead of horizontally
+- `--adapt-big, -ab` - Adapt larger image to the the smaller image
+
+<br>
+
+- `--classify, -cl` - Flag to perform image classification
+- `--detect, -dt` &nbsp;&nbsp;&nbsp; - Flag to perform object detection; only detects the highest confidence object
+- `--detect, -dta` &nbsp; - Flag to perform object detection; detects all objects present
+- `--segment, -seg` - Flag to perform image segmentation
 
 <br>
 

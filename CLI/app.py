@@ -1,7 +1,11 @@
 import sys
 from os import listdir
 
-from .utils import READ_PATH, image_handler, image_processor
+from .utils import READ_PATH, ImageInferer, image_handler, image_processor
+
+
+def breaker(num=50, char="*"):
+    print("\n" + num*char + "\n")
 
 
 def run():
@@ -53,6 +57,10 @@ def run():
     do_combine = False
     vertical = False
     adapt_small = True
+    do_classify = False
+    do_detect = False
+    do_detect_all = False
+    do_segment = False
     save = False
     workflow = False
 
@@ -172,8 +180,13 @@ def run():
     if args_21[0] in sys.argv or args_21[1] in sys.argv: 
         do_combine = True
         adapt_small = False
+    
+    if args_22[0] in sys.argv or args_22[1] in sys.argv: do_classify = True
+    if args_23[0] in sys.argv or args_23[1] in sys.argv: do_detect = True
+    if args_24[0] in sys.argv or args_24[1] in sys.argv: do_detect_all = True
+    if args_25[0] in sys.argv or args_25[1] in sys.argv: do_segment = True
 
-    if args_26[0] in sys.argv or args_26[1] in sys.argv:  save = True
+    if args_26[0] in sys.argv or args_26[1] in sys.argv: save = True
     if args_27 in sys.argv: workflow = True
 
     assert filename_1 is not None, "Enter argument for --file1 | -f1"
@@ -192,6 +205,52 @@ def run():
     if do_saturation: image = image_processor.adjust_saturation(image=image, saturation=saturation)
     if do_vibrance: image = image_processor.adjust_vibrance(image=image, vibrance=vibrance)
     if do_sharpen: image = image_processor.sharpen(image=image, kernel_size=sharpen_kernel_size)
+    if do_classify: 
+        image_inferer = ImageInferer(infer_type="classify")
+        image_inferer.setup()
+
+        label = image_inferer.infer(image)
+        breaker()
+        print(f"Label : {label}")
+        breaker()
+    
+    if do_detect or do_detect_all: 
+        if do_detect:
+            image_inferer = ImageInferer(infer_type="detect")
+            image_inferer.setup()
+
+            disp_image = image.copy()
+            label = image_inferer.infer(image, disp_image, image.shape[1], image.shape[0])
+            breaker()
+            print(f"Label : {label}")
+            breaker()
+
+        if do_detect_all:
+            image_inferer = ImageInferer(infer_type="detect_all")
+            image_inferer.setup()
+
+            disp_image = image.copy()
+            labels = image_inferer.infer(image, disp_image, image.shape[1], image.shape[0])
+            breaker()
+            print("Labels Detected : ", end="")
+            for label in labels:
+                print(label, end=",")
+            print("\n", end="")
+            breaker()
+
+
+    if do_segment:
+        image_inferer = ImageInferer(infer_type="segment")
+        image_inferer.setup()
+
+        disp_image, labels = image_inferer.infer(image, None, image.shape[1], image.shape[0])
+
+        breaker()
+        print("Labels Detected : ", end="")
+        for label in labels:
+            print(label, end=",")
+        print("\n", end="")
+        breaker()
 
     if isinstance(width, int) and height is None:
         h, _, _ = image.shape
@@ -223,7 +282,15 @@ def run():
 
     if not save:
         if not workflow:
-            image_handler.show(image)
+            if do_classify:
+                pass
+            elif do_segment or do_detect or do_detect_all:
+                image_handler.show(disp_image)
+            else:
+                image_handler.show(image)
     else:
-        image_handler.save_image(image)
+        if do_segment or do_detect or do_detect_all:
+            image_handler.save_image(disp_image)
+        else:
+            image_handler.save_image(image)
     

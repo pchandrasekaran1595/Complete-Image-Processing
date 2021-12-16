@@ -1,7 +1,8 @@
+import re
 import cv2
 import pytest
 import numpy as np  
-from CLI.utils import image_handler, image_processor
+from CLI.utils import image_handler, image_processor, ImageInferer
 
 image_1 = image_handler.read_image("Files/Demo_Image_1.jpg")
 image_2 = image_handler.read_image("Files/Demo_Image_2.jpg")
@@ -134,5 +135,31 @@ def test_alpha(image_1, image_2, alpha):
     if w1 != w2 or h1 != h2:
         image_2 = cv2.resize(src=image_2, dsize=(w1, h1), interpolation=cv2.INTER_AREA)
     assert image_processor.alpha_blend(image_1, image_2, alpha).all() == cv2.addWeighted(image_1, alpha, image_2, 1-alpha, 0).all()
+
+#######################################################################################################
+
+@pytest.mark.parametrize("image, label",[(image_1, r"Sports Car"), (image_2, r"Airliner")])
+def test_classifier(image, label): 
+    image_inferer = ImageInferer(infer_type="classify")
+    image_inferer.setup()
+
+    assert re.match(label, image_inferer.infer(image), re.IGNORECASE)
+
+
+@pytest.mark.parametrize("image, label",[(image_1, "Car"), (image_2, "Airplane")])
+def test_detector(image, label): 
+    image_inferer = ImageInferer(infer_type="detect")
+    image_inferer.setup()
+
+    assert re.match(label, image_inferer.infer(image, image.copy(), image.shape[1], image.shape[0]), re.IGNORECASE)
+
+
+@pytest.mark.parametrize("image, label",[(image_1, "Car"), (image_2, "Aeroplane")])
+def test_segmenter(image, label): 
+    image_inferer = ImageInferer(infer_type="segment")
+    image_inferer.setup()
+    _, detected_label = image_inferer.infer(image, None, image.shape[1], image.shape[0])
+
+    assert re.match(label, detected_label[0], re.IGNORECASE)
 
 #######################################################################################################
